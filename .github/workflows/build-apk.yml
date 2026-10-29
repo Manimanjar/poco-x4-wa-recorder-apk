@@ -1,0 +1,51 @@
+name: Build POCO X4 Pro WhatsApp Recorder APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle 8.4
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+
+      - name: Build Signed Release & Debug APK
+        run: |
+          gradle assembleRelease assembleDebug --no-daemon
+
+      - name: Copy APK to Root for Easy Download
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk PocoX4-WhatsApp-Recorder-v2.0.apk
+
+      - name: Upload APK as GitHub Actions Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PocoX4-WhatsApp-Recorder-APK
+          path: PocoX4-WhatsApp-Recorder-v2.0.apk
+
+      - name: Publish Direct APK Download to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.0.${{ github.run_number }}
+          name: "POCO X4 Pro WhatsApp Recorder v2.0 (Build #${{ github.run_number }})"
+          body: |
+            ### Direct APK Download for POCO X4 Pro 5G
+            Tap **`PocoX4-WhatsApp-Recorder-v2.0.apk`** under **Assets** below to download and install directly on your POCO X4 Pro.
+          files: PocoX4-WhatsApp-Recorder-v2.0.apk
